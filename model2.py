@@ -1,6 +1,4 @@
-# I could not figure out how to get this model imported without errors
-# webcam stuff looks good though
-
+# Model for visually impaired people to detect emotions with camera
 # Import libraries
 import cv2
 import numpy as np
@@ -8,7 +6,7 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 
 # Load the trained model
-model_best = load_model('C:\\Users\\hanna\\OneDrive\\Desktop\\software_dev\\face_model.h5') # set your machine model file path here
+model_best = load_model(r'C:\software-development-2025\face_model.h5') # set your machine model file path here
 
 # Classes 7 emotional states
 class_names = ['Angry', 'Disgusted', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']

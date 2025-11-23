@@ -1,3 +1,4 @@
+# Model for emotion detection with text input (need to add speech-to-text)
 # Import libraries and model
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
@@ -23,7 +24,7 @@ def predict_emotions(text):
     }
 
 # Test
-text = "I’m so nervous about my exams tomorrow!"
+text = "My hands are shaking so bad; I have a test tomorow."
 result = predict_emotions(text)
 
 print("Input:", text)
