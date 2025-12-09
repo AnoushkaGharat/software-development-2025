@@ -1,4 +1,4 @@
-# Ignore audio_files_for testing folder
+# Ignore large folders
 audio_files_for_testing/
 cache/
 model/
