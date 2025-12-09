@@ -1,0 +1,4 @@
+# Ignore audio_files_for testing folder
+audio_files_for_testing/
+cache/
+model/
