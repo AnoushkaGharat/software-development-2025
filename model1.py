@@ -24,7 +24,7 @@ def predict_emotions(text):
     }
 
 # Test
-text = "My hands are shaking so bad; I have a test tomorow."
+text = "Why am I here? Why am I feeling this way?"
 result = predict_emotions(text)
 
 print("Input:", text)
