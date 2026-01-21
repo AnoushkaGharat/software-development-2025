@@ -1,0 +1,36 @@
+import torch
+import librosa
+import numpy as np
+import io
+from datasets import load_dataset
+from transformers import Wav2Vec2ForSequenceClassification, Wav2Vec2FeatureExtractor
+
+
+def map_to_array(example):
+    # The audio data is stored as bytes in the parquet file
+    audio_data = example["audio"]
+    
+    # Extract audio from bytes if it's a dict with 'bytes' key
+    if isinstance(audio_data, dict) and "bytes" in audio_data:
+        # Load audio from bytes using librosa
+        audio_bytes = audio_data["bytes"]
+        speech, _ = librosa.load(io.BytesIO(audio_bytes), sr=16000, mono=True)
+        example["speech"] = speech
+    else:
+        example["speech"] = np.array([])
+    
+    return example
+
+# load a demo dataset and read audio files
+dataset = load_dataset("parquet", data_files="C:\\Users\\zixua\\Downloads\\session1-00000-of-00001.parquet")
+dataset = dataset.map(map_to_array)
+
+model = Wav2Vec2ForSequenceClassification.from_pretrained("superb/wav2vec2-base-superb-er")
+feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained("superb/wav2vec2-base-superb-er")
+
+# compute attention masks and normalize the waveform if needed
+inputs = feature_extractor(dataset[:4]["speech"], sampling_rate=16000, padding=True, return_tensors="pt")
+
+logits = model(**inputs).logits
+predicted_ids = torch.argmax(logits, dim=-1)
+labels = [model.config.id2label[_id] for _id in predicted_ids.tolist()]

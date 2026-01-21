@@ -1,0 +1,4 @@
+# Ignore large folders
+audio_files_for_testing/
+cache/
+model/
