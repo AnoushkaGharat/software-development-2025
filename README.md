@@ -1,4 +1,5 @@
 Team ID: 22840-2
+
 Overview:
 The 2025-2026 Design Challenge for the TSA Software Development event is to develop a software program that removes barriers and increases accessibility for people with vision or hearing disabilities. The goal of our project is to create a web-based interface that accepts audio and/or video input, detect emotional tone or expression, and translate it into visual and/or spoken feedback for accessibility. This way, we aim to help people with either vision or hearing disabilities by translating emotional cues that normally would be missed.
 System Components:
