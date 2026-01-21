@@ -6,6 +6,7 @@ System Components:
 Input Devices:
 -	Microphone (audio)
 -	Webcam (video)
+
 Processing Modules:
 -	Audio processing - The model processes 2-second audio chunks at 16kHz sample rate and outputs emotion predictions
 -	  SpeechBrain's inference
