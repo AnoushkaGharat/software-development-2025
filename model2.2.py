@@ -1,120 +1,62 @@
-# Emotion Detection (Combo Model)
-# CNN + DeepFace
-
+# Model for visually impaired people to detect emotions with camera
+# Import libraries
 import cv2
 import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-from deepface import DeepFace
 
-# Configuration
+# Load the trained model
+model_best = load_model(r'C:\software-development-2025\face_model.h5') # set your machine model file path here
 
-CNN_MODEL_PATH = r"C:\software-development-2025\face_model.h5"
+# Classes 7 emotional states
+class_names = ['Angry', 'Disgusted', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
-CNN_WEIGHT = 0.6
-DEEPFACE_WEIGHT = 0.4
+# Load the pre-trained face cascade
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-COMMON_EMOTIONS = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
-
-# ------------------------------
-# Load models
-# ------------------------------
-
-print("[INFO] Loading CNN emotion model...")
-cnn_model = load_model(CNN_MODEL_PATH)
-
-print("[INFO] Loading face detector...")
-face_cascade = cv2.CascadeClassifier(
-    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
-)
-
-# Functions
-
-def predict_cnn_emotion(face_bgr):
-    """Return emotion probability dictionary from CNN"""
-    face_gray = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2GRAY)
-    face_gray = cv2.resize(face_gray, (48, 48))
-    face_gray = image.img_to_array(face_gray)
-    face_gray = np.expand_dims(face_gray, axis=0)
-
-    preds = cnn_model.predict(face_gray, verbose=0)[0]
-    return dict(zip(COMMON_EMOTIONS, preds))
-
-
-def predict_deepface_emotion(face_bgr):
-    """Return emotion probability dictionary from DeepFace"""
-    face_rgb = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
-    face_rgb = cv2.resize(face_rgb, (224, 224))
-
-    try:
-        result = DeepFace.analyze(
-            face_rgb,
-            actions=['emotion'],
-            enforce_detection=False
-        )
-
-        if isinstance(result, list):
-            result = result[0]
-
-        scores = result['emotion']
-        return {k.lower(): v / 100 for k, v in scores.items()}
-
-    except Exception as e:
-        print("[WARNING] DeepFace error:", e)
-        return None
-
-
-def ensemble_emotion(cnn_probs, deepface_probs):
-    """Combine predictions using weighted voting"""
-    combined = {}
-
-    for emotion in COMMON_EMOTIONS:
-        combined[emotion] = CNN_WEIGHT * cnn_probs.get(emotion, 0)
-
-        if deepface_probs:
-            combined[emotion] += DEEPFACE_WEIGHT * deepface_probs.get(emotion, 0)
-
-    final_emotion = max(combined, key=combined.get)
-    confidence = combined[final_emotion]
-
-    return final_emotion, confidence
-
-# Webcam loop
-
+# Open a connection to the webcam (0 is usually the default camera)
 cap = cv2.VideoCapture(0)
-print("Press Q to quit.")
 
 while True:
+    # Capture frame-by-frame
     ret, frame = cap.read()
-    if not ret:
-        break
 
+    # Convert the frame to grayscale for face detection
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
+    # Detect faces in the frame
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5, minSize=(30, 30))
+
+    # Process each detected face
     for (x, y, w, h) in faces:
-        face_roi = frame[y:y+h, x:x+w]
+        # Extract the face region
+        face_roi = frame[y:y + h, x:x + w]
 
-        # CNN prediction
-        cnn_probs = predict_cnn_emotion(face_roi)
+        # Resize the face image to the required input size for the model
+        face_image = cv2.resize(face_roi, (48, 48))
+        face_image = cv2.cvtColor(face_image, cv2.COLOR_BGR2GRAY)
+        face_image = image.img_to_array(face_image)
+        face_image = np.expand_dims(face_image, axis=0)
+        face_image = np.vstack([face_image])
 
-        # DeepFace prediction
-        deepface_probs = predict_deepface_emotion(face_roi)
+        # Predict emotion using the loaded model
+        predictions = model_best.predict(face_image)
+        emotion_label = class_names[np.argmax(predictions)]
 
-        # Ensemble
-        emotion, confidence = ensemble_emotion(cnn_probs, deepface_probs)
+        # Display the emotion label on the frame
+        cv2.putText(frame, f'Emotion: {emotion_label}', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.9, (0, 0, 255), 2)
 
-        # Draw results
-        label = f"{emotion.capitalize()} ({confidence:.2f})"
+        # Draw a rectangle around the face
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        cv2.putText(frame, label, (x, y-10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 0, 0), 2)
+    # Display the resulting frame
+    cv2.imshow('Emotion Detection', frame)
 
-    cv2.imshow("Emotion Detection (CNN + DeepFace)", frame)
-
+    # Break the loop if 'q' key is pressed
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Release the webcam and close the window
 cap.release()
 cv2.destroyAllWindows()
